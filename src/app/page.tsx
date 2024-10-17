@@ -312,7 +312,7 @@ export default function CanvasPage() {
         {selected !== undefined && (
           <Piano
             selection={getNotesForHex(selected).map((x) => ({
-              noteNum: Midi.toMidi(x)!,
+              noteNum: Midi.toMidi(x)! - 12,
               color: colors.YELLOW_400,
             }))}
           />
