@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Canvas } from "@react-three/fiber";
+import React, { useEffect, useState } from "react";
+import { Canvas, useThree } from "@react-three/fiber";
 import { Shape } from "three";
 import { Line, MapControls, OrthographicCamera, Text } from "@react-three/drei";
 
@@ -19,6 +19,43 @@ class Point {
   constructor(public x: number, public y: number) {}
 }
 
+function cube_round(frac: { q: number; r: number; s: number }) {
+  let q = Math.round(frac.q);
+  let r = Math.round(frac.r);
+  let s = Math.round(frac.s);
+
+  const q_diff = Math.abs(q - frac.q);
+  const r_diff = Math.abs(r - frac.r);
+  const s_diff = Math.abs(s - frac.s);
+
+  if (q_diff > r_diff && q_diff > s_diff) {
+    q = -r - s;
+  } else if (r_diff > s_diff) {
+    r = -q - s;
+  } else {
+    s = -q - r;
+  }
+
+  return { q, r, s };
+}
+
+function cube_to_axial(cube: { q: number; r: number }) {
+  const q = cube.q;
+  const r = cube.r;
+  return { q, r };
+}
+
+function axial_to_cube(hex: { q: number; r: number }) {
+  const q = hex.q;
+  const r = hex.r;
+  const s = -q - r;
+  return { q, r, s };
+}
+
+function axial_round(hex: { q: number; r: number }) {
+  return cube_to_axial(cube_round(axial_to_cube(hex)));
+}
+
 function pointy_hex_corner(center: Point, size: number, i: number) {
   const angle_deg = 60 * i - 30;
   const angle_rad = (Math.PI / 180) * angle_deg;
@@ -31,11 +68,20 @@ function pointy_hex_corner(center: Point, size: number, i: number) {
 
 const size = 1;
 
-function toGridPoint(q: number, r: number) {
+function hexToGridPoint(q: number, r: number) {
   return new Point(
     size * (Math.sqrt(3) * q + (Math.sqrt(3) / 2) * r),
     size * (3 / 2) * r
   );
+}
+
+function getLabelForHex(hex: Hex) {
+  if (hex.quality === "") {
+    return "";
+  }
+
+  const chord = Chord.get([hex.root, hex.quality]);
+  return chord.tonic + chord.aliases[0];
 }
 
 const HexShape = ({
@@ -48,7 +94,7 @@ const HexShape = ({
   selected: boolean;
 }) => {
   const [hover, setHover] = useState(false);
-  const center = toGridPoint(hex.q, hex.r);
+  const center = hexToGridPoint(hex.q, hex.r);
 
   const shape = React.useMemo(() => {
     const hex = new Shape();
@@ -65,26 +111,26 @@ const HexShape = ({
     return hex;
   }, [center]);
 
-  const chord = Chord.get([hex.root, hex.quality]);
-
   return (
     <>
-      <mesh
-        onPointerEnter={() => setHover(true)}
-        onPointerLeave={() => setHover(false)}
-        onClick={() => onClick(hex)}
-      >
-        <shapeGeometry args={[shape]} />
-        <meshBasicMaterial
-          color={
-            selected
-              ? colors.YELLOW_400
-              : hover
-              ? colors.BLUE_500
-              : colors.BLUE_400
-          }
-        />
-      </mesh>
+      {hex.quality !== "" && (
+        <mesh
+          onPointerEnter={() => setHover(true)}
+          onPointerLeave={() => setHover(false)}
+          onClick={() => onClick(hex)}
+        >
+          <shapeGeometry args={[shape]} />
+          <meshBasicMaterial
+            color={
+              selected
+                ? colors.YELLOW_400
+                : hover
+                ? colors.BLUE_500
+                : colors.BLUE_400
+            }
+          />
+        </mesh>
+      )}
 
       <Line
         points={shape.getPoints()}
@@ -100,7 +146,7 @@ const HexShape = ({
         anchorX="center"
         anchorY="middle"
       >
-        {chord.tonic + chord.aliases[0]}
+        {getLabelForHex(hex)}
       </Text>
 
       <Text
@@ -246,7 +292,7 @@ function Scene({
   function onClick(hex: Hex) {
     setSelected(hex);
 
-    const gridPoint = toGridPoint(hex.q, hex.r);
+    const gridPoint = hexToGridPoint(hex.q, hex.r);
 
     const target = new THREE.Vector3(gridPoint.x, gridPoint.y, 5);
     store.target = target;
@@ -275,18 +321,159 @@ function getNotesForHex(hex: Hex) {
     .map(Chord.steps(hex.quality, hex.root));
 }
 
-export default function CanvasPage() {
-  const initialHex = hexes[6];
-  const initialPoint = toGridPoint(initialHex.q, initialHex.r);
+function pixel_to_pointy_hex(point: Point) {
+  const q = ((Math.sqrt(3) / 3) * point.x - (1 / 3) * point.y) / size;
+  const r = ((2 / 3) * point.y) / size;
+  return axial_round({ q, r });
+}
 
-  const [selected, setSelected] = useState<Hex | undefined>(initialHex);
+type HexCoord = {
+  q: number;
+  r: number;
+};
+
+class HexMapEventTarget extends EventTarget {
+  readonly chunkSize = 6;
+  generatedChunks: Record<number, Hex[]> = {};
+
+  getHexes(): Hex[] {
+    return Object.values(this.generatedChunks).flat();
+  }
+
+  updateBounds(bounds: { min: HexCoord; max: HexCoord }) {
+    // console.log(`r: ${bounds.min.r}->${bounds.max.r}`);
+
+    const rValues = Range.numeric([
+      Math.floor(bounds.min.r / this.chunkSize),
+      Math.floor(bounds.max.r / this.chunkSize),
+    ]).map((x) => x * this.chunkSize);
+
+    rValues.forEach((r) => {
+      if (this.generatedChunks[r] === undefined) {
+        this.generateChunk(0, r);
+      }
+    });
+  }
+
+  private generateChunk(q: number, r: number) {
+    console.log(`Generate chunk: ${r}->${r + this.chunkSize - 1}`);
+
+    const chunks: Hex[] = [];
+
+    Range.numeric([-4, 4]).forEach((q) => {
+      Range.numeric([r, r + this.chunkSize - 1]).forEach((r) => {
+        chunks.push({
+          q: q - Math.floor(r / 2),
+          r,
+          quality: "",
+          root: "",
+        });
+      });
+    });
+
+    this.generatedChunks[r] = chunks;
+    this.dispatchEvent(new Event("chunksUpdated"));
+  }
+}
+
+const hexMapTarget = new HexMapEventTarget();
+
+function Resize({ controlsTarget }: { controlsTarget: EventTarget }) {
+  const { camera } = useThree();
+  const [, setCounter] = useState(0);
+
+  useEffect(() => {
+    function calcWidthHeight() {
+      if (camera instanceof THREE.OrthographicCamera) {
+        const zoom = camera.zoom;
+
+        const b = {
+          minX: camera.position.x + camera.left / zoom,
+          maxX: camera.position.x + camera.right / zoom,
+          maxY: camera.position.y + camera.top / zoom,
+          minY: camera.position.y + camera.bottom / zoom,
+        };
+
+        const topLeft = pixel_to_pointy_hex({ x: b.minX, y: b.maxY });
+        const bottomRight = pixel_to_pointy_hex({ x: b.maxX, y: b.minY });
+
+        const h = {
+          min: { q: topLeft.q, r: topLeft.r },
+          max: { q: bottomRight.q, r: bottomRight.r },
+        };
+
+        hexMapTarget.updateBounds(h);
+      }
+    }
+    calcWidthHeight();
+
+    controlsTarget.addEventListener("moved", calcWidthHeight);
+
+    return () => {
+      controlsTarget.removeEventListener("moved", calcWidthHeight);
+    };
+  }, [camera, controlsTarget]);
+
+  useEffect(() => {
+    function update() {
+      setCounter((c) => c + 1);
+    }
+
+    hexMapTarget.addEventListener("chunksUpdated", update);
+
+    return () => {
+      hexMapTarget.removeEventListener("chunksUpdated", update);
+    };
+  }, []);
 
   return (
     <>
+      {hexMapTarget.getHexes().map((hex) => (
+        <HexShape
+          key={`${hex.q},${hex.r}`}
+          hex={hex}
+          onClick={() => {}}
+          selected={false}
+        />
+      ))}
+    </>
+  );
+}
+
+class ControlsEventTarget extends EventTarget {
+  constructor() {
+    super();
+  }
+
+  onMove() {
+    this.dispatchEvent(new CustomEvent("moved"));
+  }
+}
+
+export default function CanvasPage() {
+  const initialHex = hexes[6];
+  const initialPoint = hexToGridPoint(initialHex.q, initialHex.r);
+  const target = new ControlsEventTarget();
+
+  const [selected, setSelected] = useState<Hex | undefined>(initialHex);
+
+  function onMove() {
+    target.onMove();
+  }
+
+  return (
+    <div className="h-full w-full">
       <Canvas>
         <color attach="background" args={["#f5efe6"]} />
         <ambientLight intensity={1} />
-        <Scene selected={selected} setSelected={setSelected} />
+
+        <OrthographicCamera
+          makeDefault
+          position={[initialPoint.x, initialPoint.y, 5]}
+          up={[0, 0, 1]}
+          zoom={70}
+          far={10000}
+        />
 
         <MapControls
           makeDefault
@@ -296,15 +483,12 @@ export default function CanvasPage() {
           enableRotate={false}
           minZoom={30}
           maxZoom={100}
+          onChange={onMove}
         />
 
-        <OrthographicCamera
-          makeDefault
-          position={[initialPoint.x, initialPoint.y, 5]}
-          up={[0, 0, 1]}
-          zoom={70}
-          far={10000}
-        />
+        <Resize controlsTarget={target} />
+        <Scene selected={selected} setSelected={setSelected} />
+        {/* <gridHelper rotation={[Math.PI / 2, 0, 0]} /> */}
         {/* <axesHelper args={[1]} /> */}
       </Canvas>
 
@@ -318,6 +502,6 @@ export default function CanvasPage() {
           />
         )}
       </div>
-    </>
+    </div>
   );
 }
