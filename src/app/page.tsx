@@ -19,23 +19,47 @@ function getNotesForHex(hex: Hex) {
     .map(Chord.steps(hex.quality, hex.root));
 }
 
+const hexMapTarget = new HexMapEventTarget();
+
 export default function CanvasPage() {
   const initialHex = generateTile(2, -1); // C6
   const initialPoint = { x: 0, y: 0 }; //hexToGridPoint(initialHex.q, initialHex.r);
 
   const [selected, setSelected] = useState<Hex | undefined>(initialHex);
-
-  console.log(selected);
-
-  const instanceRef = useRef<HexMapEventTarget>(new HexMapEventTarget());
-
-  const hexMapTarget = instanceRef.current;
   const controlsTarget = new ControlsEventTarget();
 
   useEffect(() => {
-    hexMapTarget.reset();
-    controlsTarget.onMove();
-  }, [controlsTarget, hexMapTarget]);
+    function handleKeyDown(e: KeyboardEvent) {
+      switch (e.key) {
+        case "ArrowDown":
+          setSelected((hex) =>
+            hex ? generateTile(hex.q, hex.r - 1) : undefined
+          );
+          break;
+        case "ArrowUp":
+          setSelected((hex) =>
+            hex ? generateTile(hex.q, hex.r + 1) : undefined
+          );
+          break;
+        case "ArrowLeft":
+          setSelected((hex) =>
+            hex ? generateTile(hex.q - 1, hex.r) : undefined
+          );
+          break;
+        case "ArrowRight":
+          setSelected((hex) =>
+            hex ? generateTile(hex.q + 1, hex.r) : undefined
+          );
+          break;
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   return (
     <div className="h-full w-full">
