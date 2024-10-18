@@ -3,11 +3,10 @@ import { Hex } from "@/lib/data";
 import { HexCoord } from "@/lib/hex";
 import { generateTile } from "@/lib/tiles";
 import { Range } from "tonal";
-import { globalChunkStore } from "./chunkStore";
 
 export class HexMapEventTarget extends EventTarget {
   readonly chunkSize = 6;
-  generatedChunks = globalChunkStore;
+  generatedChunks: Map<number, Hex[]> = new Map();
 
   getHexes(): Hex[] {
     return Array.from(this.generatedChunks.values()).flat();

@@ -7,6 +7,27 @@ import * as THREE from "three";
 import HexTile from "./HexTile";
 import { Hex } from "@/lib/data";
 
+function getVisibleBounds(camera: THREE.OrthographicCamera) {
+  const zoom = camera.zoom;
+
+  const b = {
+    minX: camera.position.x + camera.left / zoom,
+    maxX: camera.position.x + camera.right / zoom,
+    maxY: camera.position.y + camera.top / zoom,
+    minY: camera.position.y + camera.bottom / zoom,
+  };
+
+  const topLeft = pixel_to_pointy_hex({ x: b.minX, y: b.maxY });
+  const bottomRight = pixel_to_pointy_hex({ x: b.maxX, y: b.minY });
+
+  const h = {
+    min: { q: topLeft.q, r: topLeft.r },
+    max: { q: bottomRight.q, r: bottomRight.r },
+  };
+
+  return h;
+}
+
 export default function InfiniteHexGrid({
   controlsTarget,
   hexMapTarget,
@@ -24,23 +45,7 @@ export default function InfiniteHexGrid({
   useEffect(() => {
     function calcWidthHeight() {
       if (camera instanceof THREE.OrthographicCamera) {
-        const zoom = camera.zoom;
-
-        const b = {
-          minX: camera.position.x + camera.left / zoom,
-          maxX: camera.position.x + camera.right / zoom,
-          maxY: camera.position.y + camera.top / zoom,
-          minY: camera.position.y + camera.bottom / zoom,
-        };
-
-        const topLeft = pixel_to_pointy_hex({ x: b.minX, y: b.maxY });
-        const bottomRight = pixel_to_pointy_hex({ x: b.maxX, y: b.minY });
-
-        const h = {
-          min: { q: topLeft.q, r: topLeft.r },
-          max: { q: bottomRight.q, r: bottomRight.r },
-        };
-
+        const h = getVisibleBounds(camera);
         hexMapTarget.updateBounds(h);
       }
     }
