@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { Shape } from "three";
 import { Line, MapControls, OrthographicCamera, Text } from "@react-three/drei";
 
 import * as THREE from "three";
@@ -97,7 +96,7 @@ const HexShape = ({
   const center = hexToGridPoint(hex.q, hex.r);
 
   const shape = React.useMemo(() => {
-    const hex = new Shape();
+    const hex = new THREE.Shape();
     const start = pointy_hex_corner(center, size, 0);
 
     hex.moveTo(start.x, start.y);
