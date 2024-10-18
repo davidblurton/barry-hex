@@ -3,6 +3,7 @@ export class Point {
 }
 
 export const HEX_SIZE = 1;
+export const HEX_WIDTH = 8;
 
 export type HexCoord = {
   q: number;

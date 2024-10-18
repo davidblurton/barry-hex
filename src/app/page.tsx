@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { MapControls, OrthographicCamera } from "@react-three/drei";
 
 import { Chord, Midi, Range } from "tonal";
 import Piano from "@/components/Piano";
-import { hexToGridPoint } from "@/lib/hex";
 import { ControlsEventTarget } from "@/events/ControlsEventTarget";
 import { HexMapEventTarget } from "@/events/HexMapEventTarget";
 import InfiniteHexGrid from "@/components/InfiniteHexGrid";

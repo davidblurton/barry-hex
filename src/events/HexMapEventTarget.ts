@@ -1,5 +1,5 @@
 "use client";
-import { HexCoord } from "@/lib/hex";
+import { HEX_WIDTH, HexCoord } from "@/lib/hex";
 import { generateTile, Hex } from "@/lib/tiles";
 import { Range } from "tonal";
 
@@ -34,10 +34,9 @@ export class HexMapEventTarget extends EventTarget {
 
     const chunks: Hex[] = [];
 
-    Range.numeric([0, 7]).forEach((q) => {
+    Range.numeric([0, HEX_WIDTH - 1]).forEach((q) => {
       Range.numeric([r, r + this.chunkSize - 1]).forEach((r) => {
-        // q - Math.floor(r / 2)
-        chunks.push(generateTile(q, r));
+        chunks.push(generateTile(q - Math.floor(r / 2), r));
       });
     });
 

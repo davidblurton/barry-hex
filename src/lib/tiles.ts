@@ -1,9 +1,12 @@
+import { colors } from "./colors";
+
 export type Hex = {
   q: number;
   r: number;
   root: string;
   quality: string;
   offset: number;
+  color: string;
 };
 
 function mod(x: number, y: number) {
@@ -61,6 +64,33 @@ function getOffset(q: number, r: number) {
   return qOffset + rOffset;
 }
 
+function getColor(q: number, r: number) {
+  const rMod = mod(r, 12);
+
+  switch (rMod) {
+    case 1:
+      return colors.RED_500;
+    case 2:
+    case 3:
+    case 4:
+      return colors.BLUE_500;
+    case 5:
+      return colors.GREEN_500;
+    case 6:
+    case 7:
+    case 8:
+      return colors.RED_500;
+    case 9:
+      return colors.BLUE_500;
+    case 10:
+    case 11:
+    case 0:
+      return colors.GREEN_500;
+    default:
+      throw new Error();
+  }
+}
+
 export function generateTile(q: number, r: number): Hex {
   return {
     q,
@@ -68,5 +98,6 @@ export function generateTile(q: number, r: number): Hex {
     quality: getQuality(r),
     root: getRoot(q, r),
     offset: getOffset(q, r),
+    color: getColor(q, r),
   };
 }

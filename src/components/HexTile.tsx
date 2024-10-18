@@ -51,15 +51,7 @@ export default function HexTile({
           onClick={() => onClick(hex)}
         >
           <shapeGeometry args={[shape]} />
-          <meshBasicMaterial
-            color={
-              selected
-                ? colors.YELLOW_400
-                : hover
-                ? colors.BLUE_500
-                : colors.BLUE_400
-            }
-          />
+          <meshBasicMaterial color={selected ? colors.YELLOW_400 : hex.color} />
         </mesh>
       )}
 
