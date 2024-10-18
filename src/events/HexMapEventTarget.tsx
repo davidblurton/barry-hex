@@ -1,14 +1,14 @@
 "use client";
-import { Hex } from "@/app/page";
+import { Hex } from "@/lib/data";
 import { HexCoord } from "@/lib/hex";
 import { Range } from "tonal";
 
 export class HexMapEventTarget extends EventTarget {
   readonly chunkSize = 6;
-  generatedChunks: Record<number, Hex[]> = {};
+  generatedChunks: Map<number, Hex[]> = new Map();
 
   getHexes(): Hex[] {
-    return Object.values(this.generatedChunks).flat();
+    return Array.from(this.generatedChunks.values()).flat();
   }
 
   updateBounds(bounds: { min: HexCoord; max: HexCoord }) {
@@ -19,7 +19,7 @@ export class HexMapEventTarget extends EventTarget {
     ]).map((x) => x * this.chunkSize);
 
     rValues.forEach((r) => {
-      if (this.generatedChunks[r] === undefined) {
+      if (!this.generatedChunks.has(r)) {
         this.generateChunk(0, r);
       }
     });
@@ -41,7 +41,7 @@ export class HexMapEventTarget extends EventTarget {
       });
     });
 
-    this.generatedChunks[r] = chunks;
+    this.generatedChunks.set(r, chunks);
     this.dispatchEvent(new Event("chunksUpdated"));
   }
 }
