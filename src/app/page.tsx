@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { MapControls, OrthographicCamera } from "@react-three/drei";
 
@@ -51,6 +51,11 @@ function getNotesForHex(hex: Hex) {
 const controlsTarget = new ControlsEventTarget();
 const hexMapTarget = new HexMapEventTarget();
 
+if (module.hot) {
+  hexMapTarget.reset();
+  module.hot.accept();
+}
+
 export default function CanvasPage() {
   const initialHex = hexes[6];
   const initialPoint = hexToGridPoint(initialHex.q, initialHex.r);
@@ -85,8 +90,10 @@ export default function CanvasPage() {
         <InfiniteHexGrid
           controlsTarget={controlsTarget}
           hexMapTarget={hexMapTarget}
+          selected={selected}
+          onClick={setSelected}
         />
-        <NoteTiles selected={selected} setSelected={setSelected} />
+        {/* <NoteTiles selected={selected} setSelected={setSelected} /> */}
         {/* <gridHelper rotation={[Math.PI / 2, 0, 0]} /> */}
         {/* <axesHelper args={[1]} /> */}
       </Canvas>

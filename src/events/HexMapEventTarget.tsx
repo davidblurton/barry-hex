@@ -1,11 +1,13 @@
 "use client";
 import { Hex } from "@/lib/data";
 import { HexCoord } from "@/lib/hex";
+import { generateTile } from "@/lib/tiles";
 import { Range } from "tonal";
+import { globalChunkStore } from "./chunkStore";
 
 export class HexMapEventTarget extends EventTarget {
   readonly chunkSize = 6;
-  generatedChunks: Map<number, Hex[]> = new Map();
+  generatedChunks = globalChunkStore;
 
   getHexes(): Hex[] {
     return Array.from(this.generatedChunks.values()).flat();
@@ -25,19 +27,19 @@ export class HexMapEventTarget extends EventTarget {
     });
   }
 
+  reset() {
+    this.generatedChunks.clear();
+  }
+
   private generateChunk(q: number, r: number) {
     console.log(`Generate chunk: ${r}->${r + this.chunkSize - 1}`);
 
     const chunks: Hex[] = [];
 
-    Range.numeric([-4, 4]).forEach((q) => {
+    Range.numeric([0, 3]).forEach((q) => {
       Range.numeric([r, r + this.chunkSize - 1]).forEach((r) => {
-        chunks.push({
-          q: q - Math.floor(r / 2),
-          r,
-          quality: "",
-          root: "",
-        });
+        // q - Math.floor(r / 2)
+        chunks.push(generateTile(q, r));
       });
     });
 

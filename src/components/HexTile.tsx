@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { Chord } from "tonal";
 
 function getLabelForHex(hex: Hex) {
-  if (hex.quality === "") {
+  if (hex.root === "" || hex.quality === "") {
     return "";
   }
 

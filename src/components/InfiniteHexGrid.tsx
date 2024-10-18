@@ -5,13 +5,18 @@ import { useState, useEffect } from "react";
 
 import * as THREE from "three";
 import HexTile from "./HexTile";
+import { Hex } from "@/lib/data";
 
 export default function InfiniteHexGrid({
   controlsTarget,
   hexMapTarget,
+  selected,
+  onClick,
 }: {
   controlsTarget: EventTarget;
   hexMapTarget: HexMapEventTarget;
+  onClick: (hex: Hex) => void;
+  selected?: Hex;
 }) {
   const { camera } = useThree();
   const [, setCounter] = useState(0);
@@ -66,8 +71,8 @@ export default function InfiniteHexGrid({
         <HexTile
           key={`${hex.q},${hex.r}`}
           hex={hex}
-          onClick={() => {}}
-          selected={false}
+          onClick={onClick}
+          selected={selected?.q === hex.q && selected?.r === hex.r}
         />
       ))}
     </>
