@@ -11,7 +11,6 @@ import { ChunkCache, HexMapEventTarget } from "@/events/HexMapEventTarget";
 import InfiniteHexGrid from "@/components/InfiniteHexGrid";
 import { colors } from "@/lib/colors";
 import { generateTile, Hex } from "@/lib/tiles";
-import "@types/webpack-env";
 
 function getNotesForHex(hex: Hex) {
   return Range.numeric([0, 3])

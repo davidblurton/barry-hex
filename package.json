@@ -20,7 +20,7 @@
     "typescript-event-target": "^1.1.1"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "22.7.7",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/webpack-env": "^1.18.5",
