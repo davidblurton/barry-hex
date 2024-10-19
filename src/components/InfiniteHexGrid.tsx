@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 
 import * as THREE from "three";
 import HexTile from "./HexTile";
-import { Hex } from "@/lib/data";
+import { Hex } from "@/lib/tiles";
 
 function getVisibleBounds(camera: THREE.OrthographicCamera) {
   const zoom = camera.zoom;

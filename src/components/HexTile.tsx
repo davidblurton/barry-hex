@@ -1,5 +1,6 @@
 import { colors } from "@/lib/colors";
-import { Hex, HEX_SIZE, hexToGridPoint, pointy_hex_corner } from "@/lib/hex";
+import { HEX_SIZE, hexToGridPoint, pointy_hex_corner } from "@/lib/hex";
+import { Hex } from "@/lib/tiles";
 import { Line, Text } from "@react-three/drei";
 import React, { useState } from "react";
 

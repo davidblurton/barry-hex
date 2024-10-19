@@ -62,7 +62,7 @@ export default function CanvasPage() {
 
   return (
     <div className="h-full w-full">
-      <Canvas>
+      <Canvas frameloop="demand">
         <color attach="background" args={["#f5efe6"]} />
         <ambientLight intensity={1} />
 
