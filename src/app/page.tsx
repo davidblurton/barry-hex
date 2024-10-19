@@ -25,12 +25,11 @@ export default function CanvasPage() {
   const [selected, setSelected] = useState<Hex | undefined>(initialHex);
   const chunkCache = useRef<ChunkCache>(new Map());
 
-  if (module.hot) {
-    chunkCache.current.clear();
-  }
+  const hexMapTarget = useRef<HexMapEventTarget>(
+    new HexMapEventTarget(chunkCache.current)
+  );
 
   const controlsTarget = new ControlsEventTarget();
-  const hexMapTarget = new HexMapEventTarget(chunkCache.current);
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
@@ -92,7 +91,7 @@ export default function CanvasPage() {
 
         <InfiniteHexGrid
           controlsTarget={controlsTarget}
-          hexMapTarget={hexMapTarget}
+          hexMapTarget={hexMapTarget.current}
           selected={selected}
           onClick={setSelected}
         />
