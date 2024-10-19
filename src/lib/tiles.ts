@@ -44,7 +44,7 @@ function getRoot(q: number, r: number) {
 }
 
 function getOffset(q: number, r: number) {
-  let qOffset = mod(q, 4) + 2;
+  const qOffset = mod(q, 4) + 2;
   let rOffset = 0;
 
   rOffset += Math.floor(r / 12) * 4 - Math.floor(r / 4);

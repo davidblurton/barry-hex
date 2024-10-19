@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import * as THREE from "three";
 import HexTile from "./HexTile";
 import { Hex } from "@/lib/tiles";
-import { createPortal } from "react-dom";
+import { ControlsEventTarget } from "@/events/ControlsEventTarget";
 
 function getVisibleBounds(camera: THREE.OrthographicCamera) {
   const zoom = camera.zoom;
@@ -35,19 +35,19 @@ export default function InfiniteHexGrid({
   selected,
   onClick,
 }: {
-  controlsTarget: EventTarget;
+  controlsTarget: ControlsEventTarget;
   hexMapTarget: HexMapEventTarget;
   onClick: (hex: Hex) => void;
   selected?: Hex;
 }) {
   const { camera } = useThree();
-  const [counter, setCounter] = useState(0);
+  const [, setCounter] = useState(0);
 
   useEffect(() => {
     function calcWidthHeight() {
       if (camera instanceof THREE.OrthographicCamera) {
-        const h = getVisibleBounds(camera);
-        hexMapTarget.updateBounds(h);
+        const bounds = getVisibleBounds(camera);
+        hexMapTarget.updateBounds(bounds);
       }
     }
     calcWidthHeight();

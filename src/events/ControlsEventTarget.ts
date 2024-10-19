@@ -1,9 +1,11 @@
-export class ControlsEventTarget extends EventTarget {
-  constructor() {
-    super();
-  }
+import { TypedEventTarget } from "typescript-event-target";
 
+interface ControlsEvents {
+  moved: CustomEvent;
+}
+
+export class ControlsEventTarget extends TypedEventTarget<ControlsEvents> {
   onMove() {
-    this.dispatchEvent(new CustomEvent("moved"));
+    this.dispatchTypedEvent("moved", new CustomEvent("moved"));
   }
 }

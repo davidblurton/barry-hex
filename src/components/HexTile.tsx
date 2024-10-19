@@ -25,7 +25,7 @@ export default function HexTile({
   onClick: (hex: Hex) => void;
   selected: boolean;
 }) {
-  const [hover, setHover] = useState(false);
+  const [, setHover] = useState(false);
   const center = hexToGridPoint(hex.q, hex.r);
 
   const shape = React.useMemo(() => {
@@ -45,16 +45,14 @@ export default function HexTile({
 
   return (
     <>
-      {hex.quality !== "" && (
-        <mesh
-          onPointerEnter={() => setHover(true)}
-          onPointerLeave={() => setHover(false)}
-          onClick={() => onClick(hex)}
-        >
-          <shapeGeometry args={[shape]} />
-          <meshBasicMaterial color={selected ? colors.YELLOW_400 : hex.color} />
-        </mesh>
-      )}
+      <mesh
+        onPointerEnter={() => setHover(true)}
+        onPointerLeave={() => setHover(false)}
+        onClick={() => onClick(hex)}
+      >
+        <shapeGeometry args={[shape]} />
+        <meshBasicMaterial color={selected ? colors.YELLOW_400 : hex.color} />
+      </mesh>
 
       <Line
         points={shape.getPoints()}

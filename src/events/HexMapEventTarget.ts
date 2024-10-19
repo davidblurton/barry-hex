@@ -3,7 +3,14 @@ import { generateTile, Hex } from "@/lib/tiles";
 import { arrayEqual } from "@/lib/utils";
 import { Range } from "tonal";
 
-export class HexMapEventTarget extends EventTarget {
+import { TypedEventTarget } from "typescript-event-target";
+
+interface HexMapEvents {
+  visibleChunksChanged: CustomEvent;
+  chunksUpdated: CustomEvent;
+}
+
+export class HexMapEventTarget extends TypedEventTarget<HexMapEvents> {
   private readonly chunkSize = 6;
   private generatedChunks: Map<number, Hex[]> = new Map();
   private visibleChunks: number[] = [];
@@ -28,7 +35,10 @@ export class HexMapEventTarget extends EventTarget {
     });
 
     if (!arrayEqual(this.visibleChunks, prevChunks)) {
-      this.dispatchEvent(new Event("visibleChunksChanged"));
+      this.dispatchTypedEvent(
+        "visibleChunksChanged",
+        new CustomEvent("visibleChunksChanged")
+      );
     }
   }
 
@@ -48,6 +58,6 @@ export class HexMapEventTarget extends EventTarget {
     });
 
     this.generatedChunks.set(r, chunks);
-    this.dispatchEvent(new Event("chunksUpdated"));
+    this.dispatchTypedEvent("chunksUpdated", new CustomEvent("chunksUpdated"));
   }
 }
