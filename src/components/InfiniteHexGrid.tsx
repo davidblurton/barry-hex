@@ -44,31 +44,27 @@ export default function InfiniteHexGrid({
   const [, setCounter] = useState(0);
 
   useEffect(() => {
+    hexMapTarget.addEventListener("visibleChunksChanged", update);
+    controlsTarget.addEventListener("moved", calcWidthHeight);
+
     function calcWidthHeight() {
       if (camera instanceof THREE.OrthographicCamera) {
         const bounds = getVisibleBounds(camera);
         hexMapTarget.updateBounds(bounds);
       }
     }
-    calcWidthHeight();
-    controlsTarget.addEventListener("moved", calcWidthHeight);
 
-    return () => {
-      controlsTarget.removeEventListener("moved", calcWidthHeight);
-    };
-  }, [camera, controlsTarget, hexMapTarget]);
-
-  useEffect(() => {
     function update() {
       setCounter((x) => x + 1);
     }
 
-    hexMapTarget.addEventListener("visibleChunksChanged", update);
+    calcWidthHeight();
 
     return () => {
       hexMapTarget.removeEventListener("visibleChunksChanged", update);
+      controlsTarget.removeEventListener("moved", calcWidthHeight);
     };
-  }, [hexMapTarget]);
+  }, [camera, controlsTarget, hexMapTarget]);
 
   // Replace with useHexes
   const hexes = hexMapTarget.getHexes();

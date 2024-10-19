@@ -10,13 +10,20 @@ interface HexMapEvents {
   chunksUpdated: CustomEvent;
 }
 
+export type ChunkCache = Map<number, Hex[]>;
+
 export class HexMapEventTarget extends TypedEventTarget<HexMapEvents> {
   private readonly chunkSize = 6;
-  private generatedChunks: Map<number, Hex[]> = new Map();
   private visibleChunks: number[] = [];
 
+  constructor(private chunkCache: ChunkCache) {
+    super();
+  }
+
   getHexes(): Hex[] {
-    return this.visibleChunks.flatMap((r) => this.generatedChunks.get(r)!);
+    return this.visibleChunks.flatMap(
+      (r) => this.chunkCache.get(r) ?? this.generateChunk(r)
+    );
   }
 
   updateBounds(bounds: { min: HexCoord; max: HexCoord }) {
@@ -29,8 +36,14 @@ export class HexMapEventTarget extends TypedEventTarget<HexMapEvents> {
     ]).map((x) => x * this.chunkSize);
 
     this.visibleChunks.forEach((r) => {
-      if (!this.generatedChunks.has(r)) {
-        this.generateChunk(0, r);
+      if (!this.chunkCache.has(r)) {
+        const chunks = this.generateChunk(r);
+
+        this.chunkCache.set(r, chunks);
+        this.dispatchTypedEvent(
+          "chunksUpdated",
+          new CustomEvent("chunksUpdated")
+        );
       }
     });
 
@@ -42,22 +55,17 @@ export class HexMapEventTarget extends TypedEventTarget<HexMapEvents> {
     }
   }
 
-  reset() {
-    this.generatedChunks.clear();
-  }
-
-  private generateChunk(q: number, r: number) {
+  private generateChunk(r: number) {
     console.log(`Generate chunk: ${r}->${r + this.chunkSize - 1}`);
 
-    const chunks: Hex[] = [];
+    const chunk: Hex[] = [];
 
     Range.numeric([0, HEX_WIDTH - 1]).forEach((q) => {
       Range.numeric([r, r + this.chunkSize - 1]).forEach((r) => {
-        chunks.push(generateTile(q - Math.floor(r / 2), r));
+        chunk.push(generateTile(q - Math.floor(r / 2), r));
       });
     });
 
-    this.generatedChunks.set(r, chunks);
-    this.dispatchTypedEvent("chunksUpdated", new CustomEvent("chunksUpdated"));
+    return chunk;
   }
 }

@@ -1,16 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { MapControls, OrthographicCamera } from "@react-three/drei";
 
 import { Chord, Midi, Range } from "tonal";
 import Piano from "@/components/Piano";
 import { ControlsEventTarget } from "@/events/ControlsEventTarget";
-import { HexMapEventTarget } from "@/events/HexMapEventTarget";
+import { ChunkCache, HexMapEventTarget } from "@/events/HexMapEventTarget";
 import InfiniteHexGrid from "@/components/InfiniteHexGrid";
 import { colors } from "@/lib/colors";
 import { generateTile, Hex } from "@/lib/tiles";
+import "@types/webpack-env";
 
 function getNotesForHex(hex: Hex) {
   return Range.numeric([0, 3])
@@ -18,16 +19,23 @@ function getNotesForHex(hex: Hex) {
     .map(Chord.steps(hex.quality, hex.root));
 }
 
-const hexMapTarget = new HexMapEventTarget();
-
 export default function CanvasPage() {
   const initialHex = generateTile(2, -1); // C6
   const initialPoint = { x: 0, y: 0 }; //hexToGridPoint(initialHex.q, initialHex.r);
 
   const [selected, setSelected] = useState<Hex | undefined>(initialHex);
+  const chunkCache = useRef<ChunkCache>(new Map());
+
+  if (module.hot) {
+    chunkCache.current.clear();
+  }
+
   const controlsTarget = new ControlsEventTarget();
+  const hexMapTarget = new HexMapEventTarget(chunkCache.current);
 
   useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+
     function handleKeyDown(e: KeyboardEvent) {
       switch (e.key) {
         case "ArrowDown":
@@ -52,8 +60,6 @@ export default function CanvasPage() {
           break;
       }
     }
-
-    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
@@ -93,7 +99,7 @@ export default function CanvasPage() {
         />
         {/* <NoteTiles selected={selected} setSelected={setSelected} /> */}
         {/* <gridHelper rotation={[Math.PI / 2, 0, 0]} /> */}
-        <axesHelper args={[1]} />
+        {/* <axesHelper args={[1]} /> */}
       </Canvas>
 
       <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center">
