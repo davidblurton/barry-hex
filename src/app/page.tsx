@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { MapControls, OrthographicCamera } from "@react-three/drei";
 
 import { Chord, Midi, Range } from "tonal";
 import Piano from "@/components/Piano";
 import { ControlsEventTarget } from "@/events/ControlsEventTarget";
-import { ChunkCache, HexMapEventTarget } from "@/events/HexMapEventTarget";
 import InfiniteHexGrid from "@/components/InfiniteHexGrid";
 import { colors } from "@/lib/colors";
 import { generateTile, Hex } from "@/lib/tiles";
@@ -23,11 +22,6 @@ export default function CanvasPage() {
   const initialPoint = { x: 0, y: 0 }; //hexToGridPoint(initialHex.q, initialHex.r);
 
   const [selected, setSelected] = useState<Hex | undefined>(initialHex);
-  const chunkCache = useRef<ChunkCache>(new Map());
-
-  const hexMapTarget = useRef<HexMapEventTarget>(
-    new HexMapEventTarget(chunkCache.current)
-  );
 
   const controlsTarget = new ControlsEventTarget();
 
@@ -91,7 +85,6 @@ export default function CanvasPage() {
 
         <InfiniteHexGrid
           controlsTarget={controlsTarget}
-          hexMapTarget={hexMapTarget.current}
           selected={selected}
           onClick={setSelected}
         />

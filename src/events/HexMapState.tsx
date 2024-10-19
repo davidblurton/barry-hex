@@ -10,15 +10,12 @@ interface HexMapEvents {
   chunksUpdated: CustomEvent;
 }
 
-export type ChunkCache = Map<number, Hex[]>;
+type ChunkCache = Map<number, Hex[]>;
 
-export class HexMapEventTarget extends TypedEventTarget<HexMapEvents> {
+export class HexMapState extends TypedEventTarget<HexMapEvents> {
   private readonly chunkSize = 6;
   private visibleChunks: number[] = [];
-
-  constructor(private chunkCache: ChunkCache) {
-    super();
-  }
+  private chunkCache: ChunkCache = new Map();
 
   getHexes(): Hex[] {
     return this.visibleChunks.flatMap(
