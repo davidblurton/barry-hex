@@ -1,5 +1,3 @@
-"use client";
-
 export class ControlsEventTarget extends EventTarget {
   constructor() {
     super();

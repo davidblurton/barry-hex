@@ -1,28 +1,35 @@
-"use client";
 import { HEX_WIDTH, HexCoord } from "@/lib/hex";
 import { generateTile, Hex } from "@/lib/tiles";
+import { arrayEqual } from "@/lib/utils";
 import { Range } from "tonal";
 
 export class HexMapEventTarget extends EventTarget {
-  readonly chunkSize = 6;
-  generatedChunks: Map<number, Hex[]> = new Map();
+  private readonly chunkSize = 6;
+  private generatedChunks: Map<number, Hex[]> = new Map();
+  private visibleChunks: number[] = [];
 
   getHexes(): Hex[] {
-    return Array.from(this.generatedChunks.values()).flat();
+    return this.visibleChunks.flatMap((r) => this.generatedChunks.get(r)!);
   }
 
   updateBounds(bounds: { min: HexCoord; max: HexCoord }) {
     // console.log(`r: ${bounds.min.r}->${bounds.max.r}`);
-    const rValues = Range.numeric([
+    const prevChunks = Array.from(this.visibleChunks);
+
+    this.visibleChunks = Range.numeric([
       Math.floor(bounds.min.r / this.chunkSize),
       Math.floor(bounds.max.r / this.chunkSize),
     ]).map((x) => x * this.chunkSize);
 
-    rValues.forEach((r) => {
+    this.visibleChunks.forEach((r) => {
       if (!this.generatedChunks.has(r)) {
         this.generateChunk(0, r);
       }
     });
+
+    if (!arrayEqual(this.visibleChunks, prevChunks)) {
+      this.dispatchEvent(new Event("visibleChunksChanged"));
+    }
   }
 
   reset() {

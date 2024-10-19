@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import * as THREE from "three";
 import HexTile from "./HexTile";
 import { Hex } from "@/lib/tiles";
+import { createPortal } from "react-dom";
 
 function getVisibleBounds(camera: THREE.OrthographicCamera) {
   const zoom = camera.zoom;
@@ -40,7 +41,7 @@ export default function InfiniteHexGrid({
   selected?: Hex;
 }) {
   const { camera } = useThree();
-  const [, setCounter] = useState(0);
+  const [counter, setCounter] = useState(0);
 
   useEffect(() => {
     function calcWidthHeight() {
@@ -50,7 +51,6 @@ export default function InfiniteHexGrid({
       }
     }
     calcWidthHeight();
-
     controlsTarget.addEventListener("moved", calcWidthHeight);
 
     return () => {
@@ -60,19 +60,22 @@ export default function InfiniteHexGrid({
 
   useEffect(() => {
     function update() {
-      setCounter((c) => c + 1);
+      setCounter((x) => x + 1);
     }
 
-    hexMapTarget.addEventListener("chunksUpdated", update);
+    hexMapTarget.addEventListener("visibleChunksChanged", update);
 
     return () => {
-      hexMapTarget.removeEventListener("chunksUpdated", update);
+      hexMapTarget.removeEventListener("visibleChunksChanged", update);
     };
   }, [hexMapTarget]);
 
+  // Replace with useHexes
+  const hexes = hexMapTarget.getHexes();
+
   return (
     <>
-      {hexMapTarget.getHexes().map((hex) => (
+      {hexes.map((hex) => (
         <HexTile
           key={`${hex.q},${hex.r}`}
           hex={hex}
